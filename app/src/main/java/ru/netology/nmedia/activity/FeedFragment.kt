@@ -75,6 +75,7 @@ class FeedFragment : Fragment() {
             }
         }
         binding.updatingRecords.setOnClickListener {
+            viewModel.showNewerPosts()
             binding.list.smoothScrollToPosition(0)
             binding.updatingRecords.visibility = View.GONE
         }

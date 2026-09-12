@@ -28,8 +28,8 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: PostRepository =
         PostRepositoryImpl(AppDb.getInstance(context = application).postDao())
 
-    val data: LiveData<FeedModel> = repository.data.map {
-        list: List<Post> -> FeedModel(list, list.isEmpty())
+    val data: LiveData<FeedModel> = repository.data.map { list: List<Post> ->
+        FeedModel(list, list.isEmpty())
     }.catch {
         it.printStackTrace()
     }.asLiveData(Dispatchers.Default)
@@ -86,6 +86,16 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         edited.value = empty
     }
 
+    fun showNewerPosts() {
+        viewModelScope.launch {
+            try {
+                repository.saveNewer()
+            } catch (e: Exception) {
+                _dataState.value = FeedModelState(error = true)
+            }
+        }
+    }
+
     fun edit(post: Post) {
         edited.value = post
     }
@@ -102,7 +112,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 repository.likeById(id)
-            } catch (e: Exception){
+            } catch (e: Exception) {
                 _dataState.value = FeedModelState(error = true)
             }
         }
@@ -112,7 +122,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 repository.removeById(id)
-            } catch (e: Exception){
+            } catch (e: Exception) {
                 _dataState.value = FeedModelState(error = true)
             }
             repository.removeById(id)

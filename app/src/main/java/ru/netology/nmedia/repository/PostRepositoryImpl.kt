@@ -19,6 +19,7 @@ import ru.netology.nmedia.error.NetworkError
 import ru.netology.nmedia.error.UnknownError
 
 class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
+    private var newerPosts = emptyList<PostEntity>()
     override val data = dao.getAll().map {
         it.map {
             it.toDto()
@@ -50,7 +51,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
             }
 
             val body = response.body() ?: throw ApiError(response.code(), response.message())
-            dao.insert(body.toEntity())
+            newerPosts = body.toEntity()
             emit(body.size)
         }
     }.catch { e ->
@@ -73,6 +74,13 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
         }
     }
 
+    override suspend fun saveNewer() {
+        if (newerPosts.isNotEmpty()) {
+            dao.insert(newerPosts)
+            newerPosts = emptyList()
+        }
+    }
+
     override suspend fun removeById(id: Long) {
         dao.removeById(id)
         try {
@@ -80,9 +88,9 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
             if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
             }
-        } catch (e: IOException){
+        } catch (e: IOException) {
             throw NetworkError
-        } catch (e: Exception){
+        } catch (e: Exception) {
             throw e as? AppError ?: UnknownError
         }
     }
@@ -94,7 +102,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
             var response = PostsApi.service.getById(id);
             var serverPost = response.body() ?: throw ApiError(response.code(), response.message())
             if (likedByMe == serverPost.likedByMe) return
-            response = if(likedByMe){
+            response = if (likedByMe) {
                 PostsApi.service.likeById(id)
             } else {
                 PostsApi.service.dislikeById(id)
@@ -104,9 +112,9 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
             }
             serverPost = response.body() ?: throw ApiError(response.code(), response.message())
             dao.insert(PostEntity.fromDto(serverPost))
-        } catch (e: IOException){
+        } catch (e: IOException) {
             throw NetworkError
-        } catch (e: Exception){
+        } catch (e: Exception) {
             throw e as? AppError ?: UnknownError
         }
     }
