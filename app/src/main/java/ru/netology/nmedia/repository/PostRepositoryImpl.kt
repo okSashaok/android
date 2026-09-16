@@ -7,9 +7,14 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import okio.IOException
 import ru.netology.nmedia.api.*
 import ru.netology.nmedia.dao.PostDao
+import ru.netology.nmedia.dto.Attachment
+import ru.netology.nmedia.dto.AttachmentType
+import ru.netology.nmedia.dto.Media
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.entity.PostEntity
 import ru.netology.nmedia.entity.toEntity
@@ -17,6 +22,7 @@ import ru.netology.nmedia.error.ApiError
 import ru.netology.nmedia.error.AppError
 import ru.netology.nmedia.error.NetworkError
 import ru.netology.nmedia.error.UnknownError
+import java.io.File
 
 class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
     private var newerPosts = emptyList<PostEntity>()
@@ -58,8 +64,14 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
         throw AppError.from(e)
     }
 
-    override suspend fun save(post: Post) {
+    override suspend fun save(post: Post, image: File?) {
         try {
+            val media = image?.let {
+                upload(it)
+            }
+            val postWithAttachment = media?.let {
+                post.copy(attachment = Attachment(url = it.id, AttachmentType.IMAGE))
+            } ?: post
             val response = PostsApi.service.save(post)
             if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
@@ -73,6 +85,15 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
             throw UnknownError
         }
     }
+
+    private suspend fun upload(file: File): Media =
+        PostsApi.service.upload(
+            MultipartBody.Part.createFormData(
+                "file",
+                file.name,
+                file.asRequestBody()
+            )
+        )
 
     override suspend fun saveNewer() {
         if (newerPosts.isNotEmpty()) {

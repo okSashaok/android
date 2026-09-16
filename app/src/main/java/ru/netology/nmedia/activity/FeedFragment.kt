@@ -9,7 +9,9 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
+import ru.netology.nmedia.BuildConfig
 import ru.netology.nmedia.R
 import ru.netology.nmedia.adapter.OnInteractionListener
 import ru.netology.nmedia.adapter.PostsAdapter
@@ -52,6 +54,17 @@ class FeedFragment : Fragment() {
                     Intent.createChooser(intent, getString(R.string.chooser_share_post))
                 startActivity(shareIntent)
             }
+
+            override fun onImageClick(post: Post) {
+                val url = "${BuildConfig.BASE_URL}/media/${post.attachment?.url}"
+                val bundle = Bundle().apply {
+                    putString("imageUrl", url)
+                }
+                findNavController().navigate(
+                    R.id.action_feedFragment_to_imageFullscreenFragment,
+                    bundle
+                )
+            }
         })
         binding.list.adapter = adapter
         viewModel.dataState.observe(viewLifecycleOwner) { state ->
@@ -76,7 +89,13 @@ class FeedFragment : Fragment() {
         }
         binding.updatingRecords.setOnClickListener {
             viewModel.showNewerPosts()
-            binding.list.smoothScrollToPosition(0)
+            adapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
+                override fun onItemRangeInserted(positionStart: Int, itemCounter: Int) {
+                    if (positionStart == 0) {
+                        binding.list.smoothScrollToPosition(0)
+                    }
+                }
+            })
             binding.updatingRecords.visibility = View.GONE
         }
         binding.swiperefresh.setOnRefreshListener {

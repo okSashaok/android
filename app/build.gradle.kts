@@ -70,5 +70,6 @@ dependencies {
     implementation(libs.glide)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.swiperefreshlayout)
+    implementation(libs.imagepicker)
     coreLibraryDesugaring(libs.desugaring)
 }
