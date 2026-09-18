@@ -5,8 +5,10 @@ import android.net.Uri
 import androidx.lifecycle.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import ru.netology.nmedia.authorization.AppAuth
 import ru.netology.nmedia.db.AppDb
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.model.FeedModel
@@ -21,6 +23,7 @@ private val empty = Post(
     id = 0,
     content = "",
     author = "",
+    authorId = 0,
     authorAvatar = "",
     likedByMe = false,
     likes = 0,
@@ -31,10 +34,14 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: PostRepository =
         PostRepositoryImpl(AppDb.getInstance(context = application).postDao())
 
-    val data: LiveData<FeedModel> = repository.data.map { list: List<Post> ->
-        FeedModel(list, list.isEmpty())
-    }.catch {
-        it.printStackTrace()
+    val data: LiveData<FeedModel> = AppAuth.getInstance().state.flatMapLatest { token ->
+        repository.data.map { post ->
+            FeedModel(
+                post.map { post ->
+                    post.copy(ownedByMe = token?.id == post.authorId)
+                }
+            )
+        }
     }.asLiveData(Dispatchers.Default)
     val newerCount = data.switchMap {
         repository.getNewer(it.posts.firstOrNull()?.id ?: 0).catch {

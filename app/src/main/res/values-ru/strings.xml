@@ -22,4 +22,12 @@
     <string name="channel_remote_name">Уведомления с сервера</string>
     <string name="channel_remote_description">Уведомления с удалённого сервера</string>
     <string name="updating_records">Свежие записи</string>
+    <string name="sign_in">Войти</string>
+    <string name="sign_up">Зарегистрироваться</string>
+    <string name="logout">Выйти</string>
+    <string name="login">Логин</string>
+    <string name="password">Пароль</string>
+    <string name="error_empty_fields">Поля не должны быть пустыми.</string>
+    <string name="error_login_or_password">Неверный логин или пароль</string>
+    <string name="error_authorization">Ошибка авторизации</string>
 </resources>

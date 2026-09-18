@@ -5,9 +5,14 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.MenuProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.navigation.findNavController
@@ -16,9 +21,12 @@ import com.google.android.gms.common.GoogleApiAvailability
 import com.google.firebase.messaging.FirebaseMessaging
 import ru.netology.nmedia.R
 import ru.netology.nmedia.activity.NewPostFragment.Companion.textArg
+import ru.netology.nmedia.authorization.AppAuth
 import ru.netology.nmedia.databinding.ActivityAppBinding
+import ru.netology.nmedia.viewmodel.AuthViewModel
 
 class AppActivity : AppCompatActivity() {
+    private val authViewModel: AuthViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +63,39 @@ class AppActivity : AppCompatActivity() {
         }
 
         checkGoogleApiAvailability()
+        addMenuProvider(
+            object : MenuProvider {
+                override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                    menuInflater.inflate(R.menu.authorization_menu, menu)
+                    authViewModel.state.observe(this@AppActivity) { token ->
+                        val isAuthorized = token != null && token.id != 0L
+                        menu.setGroupVisible(R.id.unauthorized, !isAuthorized)
+                        menu.setGroupVisible(R.id.authorized, isAuthorized)
+                    }
+                }
+
+                override fun onMenuItemSelected(menuItem: MenuItem): Boolean =
+                    when (menuItem.itemId) {
+                        R.id.signIn -> {
+                            findNavController(R.id.nav_host_fragment).navigate(R.id.signInFragment)
+                            true
+                        }
+                        R.id.signUp -> {
+                            AppAuth.getInstance().setAuth("x-token", 5)
+                            true
+                        }
+
+                        R.id.logout -> {
+                            AppAuth.getInstance().clearAuth()
+                            true
+                        }
+
+                        else -> {
+                            false
+                        }
+                    }
+            }
+        )
     }
 
     private fun requestNotificationsPermission() {
