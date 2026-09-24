@@ -12,6 +12,7 @@ import ru.netology.nmedia.authorization.AppAuth
 import ru.netology.nmedia.dto.AuthResponse
 import ru.netology.nmedia.dto.Media
 import ru.netology.nmedia.dto.Post
+import ru.netology.nmedia.dto.PushToken
 
 private const val BASE_URL = "${BuildConfig.BASE_URL}/api/slow/"
 
@@ -63,6 +64,9 @@ interface PostsApiService {
         @Field("login") login: String,
         @Field("pass") pass: String
     ): Response<AuthResponse>
+
+    @POST("users/push-tokens")
+    suspend fun sendPushToken(@Body token: PushToken)
 
     @DELETE("posts/{id}")
     suspend fun removeById(@Path("id") id: Long): Response<Unit>
