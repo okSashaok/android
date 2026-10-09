@@ -2,20 +2,13 @@ package ru.netology.nmedia.repository
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okio.IOException
 import ru.netology.nmedia.api.*
 import ru.netology.nmedia.dao.PostDao
-import ru.netology.nmedia.dto.Attachment
-import ru.netology.nmedia.dto.AttachmentType
-import ru.netology.nmedia.dto.Media
-import ru.netology.nmedia.dto.Post
+import ru.netology.nmedia.dto.*
 import ru.netology.nmedia.entity.PostEntity
 import ru.netology.nmedia.entity.toEntity
 import ru.netology.nmedia.error.ApiError
@@ -23,8 +16,12 @@ import ru.netology.nmedia.error.AppError
 import ru.netology.nmedia.error.NetworkError
 import ru.netology.nmedia.error.UnknownError
 import java.io.File
+import javax.inject.Inject
 
-class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
+class PostRepositoryImpl @Inject constructor(
+    private val dao: PostDao,
+    private val apiService: ApiService
+) : PostRepository {
     private var newerPosts = emptyList<PostEntity>()
     override val data = dao.getAll().map {
         it.map {
@@ -34,7 +31,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
 
     override suspend fun getAll() {
         try {
-            val response = PostsApi.service.getAll()
+            val response = apiService.getAll()
             if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
             }
@@ -51,7 +48,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
     override fun getNewer(id: Long): Flow<Int> = flow {
         while (true) {
             delay(10_000)
-            val response = PostsApi.service.getNewer(id)
+            val response = apiService.getNewer(id)
             if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
             }
@@ -72,7 +69,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
             val postWithAttachment = media?.let {
                 post.copy(attachment = Attachment(url = it.id, AttachmentType.IMAGE))
             } ?: post
-            val response = PostsApi.service.save(post)
+            val response = apiService.save(post)
             if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
             }
@@ -87,7 +84,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
     }
 
     private suspend fun upload(file: File): Media =
-        PostsApi.service.upload(
+        apiService.upload(
             MultipartBody.Part.createFormData(
                 "file",
                 file.name,
@@ -105,7 +102,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
     override suspend fun removeById(id: Long) {
         dao.removeById(id)
         try {
-            val response = PostsApi.service.removeById(id)
+            val response = apiService.removeById(id)
             if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
             }
@@ -120,13 +117,13 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
         try {
             dao.toggleLikeById(id)
             val likedByMe = dao.isLikedById(id)
-            var response = PostsApi.service.getById(id);
+            var response = apiService.getById(id);
             var serverPost = response.body() ?: throw ApiError(response.code(), response.message())
             if (likedByMe == serverPost.likedByMe) return
             response = if (likedByMe) {
-                PostsApi.service.likeById(id)
+                apiService.likeById(id)
             } else {
-                PostsApi.service.dislikeById(id)
+                apiService.dislikeById(id)
             }
             if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
