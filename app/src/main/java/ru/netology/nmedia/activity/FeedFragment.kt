@@ -8,10 +8,15 @@ import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.flowWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import ru.netology.nmedia.BuildConfig
 import ru.netology.nmedia.R
 import ru.netology.nmedia.adapter.OnInteractionListener
@@ -77,17 +82,22 @@ class FeedFragment : Fragment() {
                     .show()
             }
         }
-        viewModel.data.observe(viewLifecycleOwner) { state ->
-            adapter.submitList(state.posts)
-            binding.emptyText.isVisible = state.empty
-        }
-        viewModel.newerCount.observe(viewLifecycleOwner) { count ->
-            if (count > 0) {
-                binding.updatingRecords.visibility = View.VISIBLE
-            } else {
-                binding.updatingRecords.visibility = View.GONE
+        lifecycleScope.launchWhenCreated {
+            viewModel.data.collectLatest {
+                adapter.submitData(it)
             }
         }
+        /*lifecycleScope.launch {
+            viewModel.newerCount
+                .flowWithLifecycle(viewLifecycleOwner.lifecycle, Lifecycle.State.STARTED)
+                .collectLatest { count ->
+                if (count > 0) {
+                    binding.updatingRecords.visibility = View.VISIBLE
+                } else {
+                    binding.updatingRecords.visibility = View.GONE
+                }
+            }
+        }*/
         binding.updatingRecords.setOnClickListener {
             viewModel.showNewerPosts()
             adapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {

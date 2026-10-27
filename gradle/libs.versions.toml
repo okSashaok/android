@@ -22,6 +22,7 @@ desugaring = "2.1.5"
 swiperefreshlayout = "1.2.0"
 imagepicker = "2.1"
 hilt = "2.60.1"
+paging = "3.5.3"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -46,6 +47,7 @@ desugaring = { group = "com.android.tools", name = "desugar_jdk_libs", version.r
 imagepicker = { module = "com.github.dhaval2404:imagepicker", version.ref = "imagepicker" }
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "hilt" }
+androidx-paging-runtime = { group = "androidx.paging", name = "paging-runtime", version.ref = "paging" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

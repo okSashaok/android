@@ -73,6 +73,7 @@ dependencies {
     implementation(libs.androidx.swiperefreshlayout)
     implementation(libs.imagepicker)
     implementation(libs.hilt.android)
+    implementation(libs.androidx.paging.runtime)
     ksp(libs.hilt.compiler)
     coreLibraryDesugaring(libs.desugaring)
 }
