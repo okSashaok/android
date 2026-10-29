@@ -1,5 +1,6 @@
 package ru.netology.nmedia.dao
 
+import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -11,6 +12,9 @@ import ru.netology.nmedia.entity.PostEntity
 interface PostDao {
     @Query("SELECT * FROM PostEntity ORDER BY id DESC")
     fun getAll(): Flow<List<PostEntity>>
+
+    @Query("SELECT * FROM PostEntity ORDER BY id DESC")
+    fun getPagingSource(): PagingSource<Int, PostEntity>
 
     @Query("SELECT COUNT(*) == 0 FROM PostEntity")
     suspend fun isEmpty(): Boolean
@@ -24,14 +28,19 @@ interface PostDao {
     @Query("DELETE FROM PostEntity WHERE id = :id")
     suspend fun removeById(id: Long)
 
+    @Query("DELETE FROM PostEntity")
+    suspend fun clear()
+
     @Query("SELECT likedByMe FROM PostEntity WHERE id = :id")
     suspend fun isLikedById(id: Long): Boolean
 
-    @Query("""
+    @Query(
+        """
         UPDATE PostEntity 
         SET likes = CASE WHEN likedByMe = 1 THEN likes - 1 ELSE likes + 1 END,
             likedByMe = CASE WHEN likedByMe = 1 THEN 0 ELSE 1 END 
         WHERE id = :id
-    """)
+    """
+    )
     suspend fun toggleLikeById(id: Long)
 }
