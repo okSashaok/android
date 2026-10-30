@@ -54,13 +54,7 @@ class PostRemoteMediator(
                 if (body.isEmpty()) return@withTransaction
                 when (loadType) {
                     LoadType.REFRESH -> {
-                        postRemoteKeyDao.insert(
-                            PostRemoteKeyEntity(
-                                PostRemoteKeyEntity.KeyType.AFTER,
-                                body.first().id
-                            )
-                        )
-                        if (postRemoteKeyDao.min() == null) {
+                        if (postRemoteKeyDao.max() == null) {
                             postRemoteKeyDao.insert(
                                 PostRemoteKeyEntity(
                                     PostRemoteKeyEntity.KeyType.BEFORE,
@@ -68,9 +62,6 @@ class PostRemoteMediator(
                                 )
                             )
                         }
-                    }
-
-                    LoadType.PREPEND -> {
                         postRemoteKeyDao.insert(
                             PostRemoteKeyEntity(
                                 PostRemoteKeyEntity.KeyType.AFTER,
@@ -79,10 +70,12 @@ class PostRemoteMediator(
                         )
                     }
 
+                    LoadType.PREPEND -> { /*return*/ }
+
                     LoadType.APPEND -> {
                         postRemoteKeyDao.insert(
                             PostRemoteKeyEntity(
-                                PostRemoteKeyEntity.KeyType.AFTER,
+                                PostRemoteKeyEntity.KeyType.BEFORE,
                                 body.last().id
                             )
                         )

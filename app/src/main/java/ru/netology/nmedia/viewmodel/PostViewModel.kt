@@ -44,11 +44,6 @@ class PostViewModel @Inject constructor(
             }
         }
     }.flowOn(Dispatchers.Default)
-    /*val newerCount: Flow<Int> = data.flatMapLatest {
-        repository.getNewer(it.posts.firstOrNull()?.id ?: 0).catch {
-            _dataState.postValue(FeedModelState(error = true))
-        }.flowOn(Dispatchers.Default)
-    }*/
     private val _dataState = MutableLiveData<FeedModelState>()
     val dataState: LiveData<FeedModelState>
         get() = _dataState
@@ -60,30 +55,6 @@ class PostViewModel @Inject constructor(
     private val _photo = MutableLiveData<PhotoModel>(null)
     val photo: LiveData<PhotoModel?>
         get() = _photo
-
-    init {
-        loadPosts()
-    }
-
-    fun loadPosts() = viewModelScope.launch {
-        try {
-            _dataState.value = FeedModelState(loading = true)
-            repository.getAll()
-            _dataState.value = FeedModelState()
-        } catch (e: Exception) {
-            _dataState.value = FeedModelState(error = true)
-        }
-    }
-
-    fun refreshPosts() = viewModelScope.launch {
-        try {
-            _dataState.value = FeedModelState(refreshing = true)
-            repository.getAll()
-            _dataState.value = FeedModelState()
-        } catch (e: Exception) {
-            _dataState.value = FeedModelState(error = true)
-        }
-    }
 
     fun save() {
         edited.value?.let {
