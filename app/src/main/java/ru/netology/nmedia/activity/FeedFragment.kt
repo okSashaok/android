@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 import ru.netology.nmedia.BuildConfig
 import ru.netology.nmedia.R
 import ru.netology.nmedia.adapter.OnInteractionListener
+import ru.netology.nmedia.adapter.PostLoadingStateAdapter
 import ru.netology.nmedia.adapter.PostsAdapter
 import ru.netology.nmedia.databinding.FragmentFeedBinding
 import ru.netology.nmedia.dto.Post
@@ -72,7 +73,10 @@ class FeedFragment : Fragment() {
                 )
             }
         })
-        binding.list.adapter = adapter
+        binding.list.adapter = adapter.withLoadStateHeaderAndFooter(
+            header = PostLoadingStateAdapter { adapter.retry() },
+            footer = PostLoadingStateAdapter { adapter.retry() }
+        )
         viewModel.dataState.observe(viewLifecycleOwner) { state ->
             if (state.error) {
                 Snackbar.make(binding.root, R.string.error_loading, Snackbar.LENGTH_LONG)
@@ -89,23 +93,10 @@ class FeedFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 adapter.loadStateFlow.collectLatest { state ->
                     binding.swiperefresh.isRefreshing =
-                        state.refresh is LoadState.Loading ||
-                                state.prepend is LoadState.Loading ||
-                                state.append is LoadState.Loading
+                        state.refresh is LoadState.Loading
                 }
             }
         }
-        /*lifecycleScope.launch {
-            viewModel.newerCount
-                .flowWithLifecycle(viewLifecycleOwner.lifecycle, Lifecycle.State.STARTED)
-                .collectLatest { count ->
-                if (count > 0) {
-                    binding.updatingRecords.visibility = View.VISIBLE
-                } else {
-                    binding.updatingRecords.visibility = View.GONE
-                }
-            }
-        }*/
         binding.updatingRecords.setOnClickListener {
             viewModel.showNewerPosts()
             adapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {

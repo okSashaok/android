@@ -3,6 +3,8 @@ package ru.netology.nmedia.repository
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.insertSeparators
 import androidx.paging.map
 import kotlinx.coroutines.flow.*
 import okhttp3.MultipartBody
@@ -20,6 +22,7 @@ import ru.netology.nmedia.error.NetworkError
 import ru.netology.nmedia.error.UnknownError
 import java.io.File
 import javax.inject.Inject
+import kotlin.random.Random
 
 class PostRepositoryImpl @Inject constructor(
     private val dao: PostDao,
@@ -30,7 +33,7 @@ class PostRepositoryImpl @Inject constructor(
     private var newerPosts = emptyList<PostEntity>()
 
     @OptIn(ExperimentalPagingApi::class)
-    override val data = Pager(
+    override val data: Flow<PagingData<FeedItem>> = Pager(
         config = PagingConfig(
             pageSize = 10,
             enablePlaceholders = false
@@ -46,6 +49,13 @@ class PostRepositoryImpl @Inject constructor(
         )
     ).flow.map {
         it.map(PostEntity::toDto)
+            .insertSeparators { previous, next ->
+                if (previous?.id?.rem(5) == 0L) {
+                    Ad(Random.nextLong(), "figma.jpg")
+                } else {
+                    null
+                }
+            }
     }
 
     override suspend fun save(post: Post, image: File?) {

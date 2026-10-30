@@ -29,4 +29,5 @@
     <string name="error_empty_fields">The fields must not be empty.</string>
     <string name="error_login_or_password">Invalid login or password</string>
     <string name="error_authorization">Authorization error</string>
+    <string name="retry">Retry</string>
 </resources>

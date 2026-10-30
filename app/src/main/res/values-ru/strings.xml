@@ -30,4 +30,5 @@
     <string name="error_empty_fields">Поля не должны быть пустыми.</string>
     <string name="error_login_or_password">Неверный логин или пароль</string>
     <string name="error_authorization">Ошибка авторизации</string>
+    <string name="retry">Повторить попытку</string>
 </resources>
